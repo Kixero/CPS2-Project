@@ -39,7 +39,7 @@
       </div>
       <img src="Ressources/ITM-projetTech.png"  class="map"></img>
       <div class="overlay">
-        <canvas id="canvas" width="1000" height="600"></canvas>
+        <canvas id="canvas" width="1000" height="1000"></canvas>
       </div>
   </div>
 
@@ -69,12 +69,11 @@
 
     draw();
 
-    /*
-    get('canvas').onmousemove = function (e) {
-        heat.add([e.layerX, e.layerY, 1]);
+    get('canvas').onclick = function (e) {
+        heat.add([e.layerX, e.layerY, 10]);
         frame = frame || window.requestAnimationFrame(draw);
     };
-    */
+
 
     var radius = get('radius'),
         blur = get('blur'),
@@ -86,8 +85,9 @@
     };
 
     //Add random point every sec :
-    var t=setInterval(addPoint,1000);
+    //var t=setInterval(addPoint,1000);
     /*Adding point to heatmap*/
+    /*
     function addPoint(){
       console.log('adding random point');
       var value = Math.floor(Math.random() * 20);
@@ -96,7 +96,7 @@
       heat.add([x, y, value]);
       draw();
     }
-
+    */
 
   </script>
 
