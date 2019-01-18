@@ -1,0 +1,41 @@
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix cdt: <http://w3id.org/lindt/custom_datatypes#> .
+@prefix geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> .
+
+
+<temperature> a sosa:ObservableProperty ;
+				sosa:isObservedBy <sensor/mobile1/TEMP> ;
+                rdfs:label "temperature"@en .
+
+
+<mir> a sosa:Platform ;
+		sosa:hosts <sensor/mobile1/TEMP> ;
+        rdfs:label "MIR"@en ;
+        rdfs:comment "Our MIR"@en .
+        
+
+<sensor/mobile1/TEMP> a sosa:Sensor ;
+						sosa:isHostedBy <mir> ;
+						sosa:observes <temperature> ;
+						rdfs:label "temperature sensor"@en .
+						
+
+<observation/346345> a 	sosa:Observation ;
+						sosa:observedProperty <temperature> ;
+						sosa:hasFeatureOfInterest 
+						[
+							geo:lat 35.8648067 ;
+							geo:long -120.6195831 ;
+						] ;
+						sosa:madeBySensor <sensor/mobile1/TEMP> ;
+						sosa:hasSimpleResult "25.4 Cel"^^cdt:temperature ;
+						sosa:resultTime "2017-06-06T12:36:12Z"^^xsd:dateTime ;
+
+					
+
+
+
+
