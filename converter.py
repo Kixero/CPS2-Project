@@ -36,7 +36,7 @@ def disconnectMQTT(clientMQQT):
    clientMQQT.disconnect()
 
 def main():
-    broker_address= "193.49.165.40"
+    broker_address= "192.168.1.14"
     broker_port = 1883
     while True:
         while not Connected:
