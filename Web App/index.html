@@ -75,11 +75,20 @@
     </div>
   </div>
 
+  <div id="appGetValues">
+    <div class="row" v-for="room in info">
+      <div class="col-sm">
+        {{ room.id }}
+      </div>
+    </div>
+  </div>
 
   <script src="heatmap.js/build/heatmap.js"></script>
   <script src="heatmap.js/build/heatmap.min.js"></script>
+  <script src="AppGetValues.js"></script>
 
   <script>
+
 
   window.onload = function() {
 
@@ -202,7 +211,7 @@
     $('#TEMP').on('click',function() {
       console.log("changing to temp");
       resetData();//reseting data
-
+      console.log(info);
     });
     $('#SOUND').on('click',function() {
       console.log("changing to SOUND");
@@ -235,13 +244,14 @@
         value: 25
         //value:((Math.random()* 40) >> 0)//Random val
       };
-      console.log('adding element');
+      //console.log('adding element');
       heatmap.addData(dataPoint);
 
     }
-
+    /*
     //Get Values
     var GetValue = new Vue({
+
       data: {
         info:[],
         id:null,
@@ -252,13 +262,23 @@
 
       mounted () {
         axios
-        .get('https://localhost:8080/fuseki/TestCPS2')//TODO : change that
-        .then(response => (GetValue.info = response.data))
+        .get("http://localhost:8080/fuseki/TestCPS2/query?query=SELECT+*+WHERE+%7B+++%3Fsub+%3Fpred+%3Fobj+.+%7D+")//TODO : change that
+        .then(response => (this.info = response.data))
         .catch(error => console.log(error))
       },
     });
     console.log("Get response : ");
     console.log(GetValue.info);
+    */
+
+
+    async function callValue() {
+      info = await Value.getData(); //calling external function
+      console.log("Value.x = "+ info.id);
+    }
+
+    //todo every second
+    callValue();
 
   }; //End of onload
 
@@ -276,7 +296,6 @@
 
   </script>
 
-  <!--<script src="AppGetValues.js"></script>-->
 
 </body>
 </html>
