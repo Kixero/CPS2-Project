@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script><!-- Add VueJS -->
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script><!-- Add axio -->
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><!-- Add icon library -->
+
+  <style>
+
+  /*!!!DO NOT CHANGE width and height VALUES!!!*/
+  #heatmapContainerWrapper { width:100%; height:100%; min-width: 800px;min-height: 800px; max-width: 800px;max-height: 800px;position:absolute;}
+  #heatmapContainer { width:100%; height:100%; left:0px;top:0px;}
+  .map{
+      position:absolute;
+      left:0px;
+      top:0px;
+      z-index:-1;
+      width:auto;
+      height:100%;
+  }
+  .heatmap-canvas{
+      position:absolute;
+      left:0px;
+      top:0px;
+      z-index:-1;
+      width:auto;
+      height:100%;
+  }
+  /*!!!DO NOT CHANGE width and height VALUES!!!*/
+
+  #heatmapLegend { background:white; position:absolute; top:0; right:0; padding:10px; background-color:rgba(0, 0, 0, 0.2);}
+  #min { float:left; }
+  #max { float:right; }
+
+  </style>
+</head>
+<body>
+
+  <div class="container" style="margin-top:30px">
+    <div class="row">
+      <div class="options">
+
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary" id="TEMP" > Temperature <i class="fa fa-thermometer-half"></i></input>
+            <button type="button" class="btn btn-primary" id="SOUND" > Sond <i class="fa fa-volume-up"></i></input>
+            <button type="button" class="btn btn-primary" id="HUM" > Humidité <i class="fa fa-tint"></i></input>
+        </div>
+        <button type="button" class="btn btn-primary" id="reset" ><i class="fa fa-retweet"></i></input>
+      </div>
+
+      <div id="heatmapLegend">
+        <h2>Descriptive Legend Title</h2>
+        <span id="min"></span>
+        <span id="max"></span>
+        <img id="gradient" src="" style="width:100%" />
+      </div>
+
+    </div>
+    <div class="row">
+
+      <div id="heatmapContainerWrapper" class="col-md-9">
+        <div id="heatmapContainer"><!--Where the heatmap will be created-->
+          <img src="Ressources/ITM-projetTech.png"  class="map"></img>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <script src="heatmap.js/build/heatmap.js"></script>
+  <script src="heatmap.js/build/heatmap.min.js"></script>
+
+  <script>
+
+  window.onload = function() {
+
+    /*  legend code */
+    // we want to display the gradient, so we have to draw it
+    var legendCanvas = document.createElement('canvas');
+    legendCanvas.width = 100;
+    legendCanvas.height = 10;
+
+    var legendCtx = legendCanvas.getContext('2d');
+    var gradientCfg = {};
+
+    function updateLegend(data) {
+      // the onExtremaChange callback gives us min, max, and the gradientConfig
+      // so we can update the legend
+      document.getElementById("min").textContent=data.min;
+      document.getElementById("max").textContent=data.max;
+      // regenerate gradient image
+      if (data.gradient != gradientCfg) {
+        gradientCfg = data.gradient;
+        var gradient = legendCtx.createLinearGradient(0, 0, 100, 1);
+        for (var key in gradientCfg) {
+          gradient.addColorStop(key, gradientCfg[key]);
+        }
+
+        legendCtx.fillStyle = gradient;
+        legendCtx.fillRect(0, 0, 100, 10);
+        document.getElementById("gradient").src = legendCanvas.toDataURL();
+      }
+    };
+    /* legend code end */
+
+
+    // create a heatmap instance
+    var heatmap = h337.create({
+      container: document.getElementById('heatmapContainer'),
+      radius: 30,
+      maxOpacity: 1,
+      minOpacity: 0,
+      blur: .40,
+      absolute:true, //Fix overlapping problems !Very important!
+
+      // update the legend whenever there's an extrema change
+      onExtremaChange: function onExtremaChange(data) {
+        updateLegend(data);
+      }
+    });
+
+    //initial SetData
+    resetData();
+
+  //Data random generation
+  // whenever a user clicks on the ContainerWrapper the data will be regenerated -> new max & min
+  /*
+    // boundaries for data generation
+    var width = (+window.getComputedStyle(document.body).width.replace(/px/,''));
+    var height = (+window.getComputedStyle(document.body).height.replace(/px/,''));
+    // generate 1000 datapoints
+    var generate = function() {
+      // randomly generate extremas
+      var extremas = [(Math.random() * 1000) >> 0,(Math.random() * 1000) >> 0];
+      var max = Math.max.apply(Math, extremas);
+      var min = Math.min.apply(Math,extremas);
+      var t = [];
+
+
+      for (var i = 0; i < 500; i++) {
+        var x = (Math.random()* width) >> 0;
+        var y = (Math.random()* height) >> 0;
+        var c = ((Math.random()* max-min) >> 0) + min;
+        // btw, we can set a radius on a point basis
+        var r = (Math.random()* 80) >> 0;
+        // add to dataset
+        t.push({ x: x, y: y, value: c, radius: r });
+      }
+      var init = +new Date;
+      // set the generated dataset
+      heatmap.setData({
+        min: min,
+        max: max,
+        data: t
+      });
+      console.log('took ', (+new Date) - init, 'ms');
+    };
+    // initial generate
+    generate();
+  */
+
+
+    document.getElementById('heatmapContainerWrapper').onclick = function() {
+      //console.log('regenerating');
+      //generate();
+    };
+
+    /*Add point on click*/
+    get('heatmapContainer').onclick = function (e) {
+      var dataPoint = {
+        x: e.layerX,
+        y: e.layerY,
+        radius: 50,
+        value: 25
+        //value:((Math.random()* 40) >> 0)//Random val
+      };
+      console.log('x = '+ e.layerX + ',y = ' + e.layerY  );
+      console.log('adding element');
+      heatmap.addData(dataPoint);
+    };
+
+
+    /*funciton to clear the map*/
+    function resetData(){
+      heatmap.setData({
+        min: -10,
+        max: 40, //To change
+        data: []
+      });
+    }
+
+    /*Change of data type*/
+    $('#TEMP').on('click',function() {
+      console.log("changing to temp");
+      resetData();//reseting data
+
+    });
+    $('#SOUND').on('click',function() {
+      console.log("changing to SOUND");
+      resetData();//reseting data
+
+    });
+    $('#HUM').on('click',function() {
+      console.log("changing to HUM");
+      resetData();//reseting data
+
+    });
+    $('#reset').on('click',function() {
+      console.log("reset val");
+      resetData();//reseting data
+    });
+
+    createPoint(10,12);
+    createPoint(24,12);
+    createPoint(24,20);
+    createPoint(10,20);
+
+    /*function to create a new point*/
+    function createPoint(x1,y1){
+      //extrem values for x2 and y1 : (10,12) (24,12) (24,20) (10,20)
+      coord = convertXY(x1,y1);
+      var dataPoint = {
+        x: coord[0],
+        y: coord[1],
+        radius: 30,
+        value: 25
+        //value:((Math.random()* 40) >> 0)//Random val
+      };
+      console.log('adding element');
+      heatmap.addData(dataPoint);
+
+    }
+
+    //Get Values
+    var GetValue = new Vue({
+      data: {
+        info:[],
+        id:null,
+        value:null,
+        x:null,
+        y:null,
+      },
+
+      mounted () {
+        axios
+        .get('https://localhost:8080/fuseki/TestCPS2')//TODO : change that
+        .then(response => (GetValue.info = response.data))
+        .catch(error => console.log(error))
+      },
+    });
+    console.log("Get response : ");
+    console.log(GetValue.info);
+
+  }; //End of onload
+
+  function get(id) {
+      return document.getElementById(id);
+  }
+
+
+  /*function to convert x,y values from the MIR to pixels values*/
+  function convertXY(x,y) {
+    x2 = 180 + (x-10)*440/14; //Values have been chane empiracly
+    y2 = 450 - (y-12)*300/8;
+    return [x2,y2];
+  }
+
+  </script>
+
+  <!--<script src="AppGetValues.js"></script>-->
+
+</body>
+</html>
