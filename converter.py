@@ -38,7 +38,8 @@ def send_update_request():
 
     nbre = re.sub(r"\D", "",str(datetime.datetime.now()))
 
-    posX, posY = get_position(url_info)
+    #posX, posY = get_position(url_info)
+    posX, posY = 11.3, 19.4
     lat, long = to_lat_long(posX, posY)
 
     stringQuery = '''  BASE     <http://localhost:3030>
@@ -48,6 +49,7 @@ def send_update_request():
                 PREFIX sosa:    <http://www.w3.org/ns/sosa/> 
                 PREFIX cdt:     <http://w3id.org/lindt/custom_datatypes#> 
                 PREFIX geo:     <http://www.w3.org/2003/01/geo/wgs84_pos#> 
+                PREFIX geom:  <http://data.ign.fr/def/geometrie/> 
 
                 INSERT DATA 
                 { 
@@ -62,7 +64,7 @@ def send_update_request():
                     ] ; 
                     sosa:madeBySensor <sensor/mobile1/TEMP> ; 
                     sosa:hasSimpleResult "''' + str(Temperature) + ''' Cel"^^cdt:temperature ; 
-                    sosa:resultTime "''' + get_formated_time() + '''"^^xsd:dateTime ; 
+                    sosa:resultTime "''' + get_formated_time() + '''"^^xsd:dateTime .
 
                 <observation/''' + nbre + '''H> a 	sosa:Observation ; 
                     sosa:observedProperty <humidity> ; 
@@ -75,7 +77,7 @@ def send_update_request():
                     ] ; 
                     sosa:madeBySensor <sensor/mobile1/HMDT> ; 
                     sosa:hasSimpleResult "''' + str(Humidity) + ''' %"^^cdt:dimensionless ; 
-                    sosa:resultTime "''' + get_formated_time() + '''"^^xsd:dateTime ; 
+                    sosa:resultTime "''' + get_formated_time() + '''"^^xsd:dateTime .
 
                 <observation/''' + nbre + '''S> a 	sosa:Observation ; 
                     sosa:observedProperty <sound> ; 
@@ -88,7 +90,7 @@ def send_update_request():
                     ] ; 
                     sosa:madeBySensor <sensor/mobile1/SND> ; 
                     sosa:hasSimpleResult "''' + str(Sound) + '''" ; 
-                    sosa:resultTime "''' + get_formated_time() + '''"^^xsd:dateTime ; 
+                    sosa:resultTime "''' + get_formated_time() + '''"^^xsd:dateTime .
                 
                 <observation/''' + nbre + '''L> a 	sosa:Observation ; 
                     sosa:observedProperty <luminosity> ; 
@@ -101,7 +103,7 @@ def send_update_request():
                     ] ; 
                     sosa:madeBySensor <sensor/mobile1/LUMI> ; 
                     sosa:hasSimpleResult "''' + str(Luminosity) + '''" ; 
-                    sosa:resultTime "''' + get_formated_time() + '''"^^xsd:dateTime ; 
+                    sosa:resultTime "''' + get_formated_time() + '''"^^xsd:dateTime .
                 } '''
 
     sparql = SPARQLWrapper("http://localhost:3030/mesures/update")
@@ -189,7 +191,7 @@ def main():
             time.sleep(10)
         while Connected:
             send_update_request()
-            time.sleep(1)
+            time.sleep(3)
     disconnectMQTT(client)
         
         
