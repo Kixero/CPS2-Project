@@ -136,6 +136,23 @@ def on_message(client, userdata, message):
 
     send_update_request()
 
+'''
+def go_home():
+    urllink = 
+    try:
+        url = urllib2.urlopen(urllink)
+        print('Connection to mir100')
+        url.close()
+
+        print('Alert ! Returning Home')
+
+        print('MiR connection closed')
+
+    except urllib2.URLError:
+        print('Waiting for MiR connection')
+        time.sleep(10)
+'''
+
 
 def get_position(urllink):
     try:
