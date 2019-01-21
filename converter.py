@@ -61,11 +61,12 @@ def get_formated_time():
     return str(datetime.datetime.now()).replace(' ', 'T')[:-7]
 
 def send_update_request():
-    url_info = 'http://192.168.42.253/api/v2.0.0/status' 
+    #url_info = 'http://192.168.42.253/api/v2.0.0/status' 
+    url_info = 'http://localhost:8080/api/location'
 
     nbre = re.sub(r"\D", "",str(datetime.datetime.now()))
 
-    #posX, posY = get_position(url_info)
+    posX, posY = get_position(url_info)
     posX, posY = 11.3, 19.4
     lat, long = to_lat_long(posX, posY)
 
