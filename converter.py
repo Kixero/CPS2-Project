@@ -5,6 +5,7 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 import datetime
 import time
 import re
+import math
 
 Connected = False #global variable for the state of the connection
 
@@ -27,8 +28,30 @@ def on_publish(client,userdata,result):
     print("data published " + str(result))
     pass
 
-def to_lat_long(x, y):
-    return x, y
+def to_lat_long(posX, posY):
+    #Paramètres
+    a1 = -0.42 # D1 : y = a1 x + b1
+    a2 = 2.7 # D2 : y = a2 x + b2
+    b1 = 5895038.9
+    b2 = 4365515.5
+    alpha1 = -0.4
+    alpha2 = 1.21
+    beta2 = 1.57-1.21
+
+    XL1 = 490231.9 - 1.5 * (posX-10) * math.cos(alpha1)
+    YL1 = a1 * XL1 + b1
+    
+    bd2 = YL1 - a2 * XL1
+
+    YL2 = 5689141.6 - 1.5 * (posY-10) * math.cos(beta2)
+    XL2 = (YL2 - b2)/a2
+    
+    bd1 = YL2 - a1 * XL2
+
+    postransfx = (bd2-bd1)/(a1-a2)
+    postransfy = a1 * postransfx + bd1
+
+    return postransfx, postransfy
 
 def get_formated_time():
     return str(datetime.datetime.now()).replace(' ', 'T')[:-7]
