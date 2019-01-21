@@ -9,6 +9,10 @@ import math
 
 Connected = False #global variable for the state of the connection
 
+#The token to access to the Mir AGV API
+#TODO fill the api access token
+api_token = ""
+
 Temperature = 0
 Sound = 0
 Humidity = 0
@@ -164,27 +168,30 @@ def on_message(client, userdata, message):
 
 def go_home():
     print('Alert ! Returning Home')
-    api_flush_queue = ""
-    api_go_home = ""
-    try:
-        url = urllib2.urlopen(api_flush_queue)
-        print('Connection to mir100')
-        url.close()
-        print('MiR connection closed')
+    api_queue_url = "mir.com:8080/v2.0.0/mission_queue"
 
-    except urllib2.URLError:
-        print('Waiting for MiR connection')
-        time.sleep(10)
+    delete_request = urllib2.Request(api_queue_url)
+    delete_request.add_header('Authorization', api_token)
+    delete_request.get_method = lambda: 'DELETE'
 
     try:
-        url = urllib2.urlopen(api_go_home)
-        print('Connection to mir100')
-        url.close()
-        print('MiR connection closed')
+        urllib2.urlopen(delete_request)
+    except Exception, e:
+        print(e.code)
+        print(e.read())
 
-    except urllib2.URLError:
-        print('Waiting for MiR connection')
-        time.sleep(10)
+    #TODO fill what data do we have to give to the mission_queue (ie the mission id)
+    data = {}
+    go_home_request = urllib2.Request(api_queue_url, json.dumps(data))
+    go_home_request.add_header('Authorization', api_token)
+    go_home_request.add_header('Content-Type', 'application/json')
+    go_home_request.get_method = lambda: 'DELETE'
+
+    try:
+        urllib2.urlopen(go_home_request)
+    except Exception, e:
+        print(e.code)
+        print(e.read())
 
 
 
