@@ -144,6 +144,8 @@ def on_message(client, userdata, message):
     if (message.topic == 'emse/fayol/Mobile1/sensors/d1d7e6d4-db84-4a7c-a5e0-5bbddc9f130b/metrics/TEMP'
         or message.topic == 'emse/fayol/Mobile1/CPS2/test/metrics/TEMP'):
         Temperature = message.payload
+        if Temperature > 55:
+            go_home()
 
     elif (message.topic == 'emse/fayol/Mobile1/sensors/d1d7e6d4-db84-4a7c-a5e0-5bbddc9f130b/metrics/HMDT'
         or message.topic == 'emse/fayol/Mobile1/CPS2/test/metrics/HMDT'):
@@ -159,22 +161,31 @@ def on_message(client, userdata, message):
 
     send_update_request()
 
-'''
+
 def go_home():
-    urllink = 
+    print('Alert ! Returning Home')
+    api_flush_queue = ""
+    api_go_home = ""
     try:
-        url = urllib2.urlopen(urllink)
+        url = urllib2.urlopen(api_flush_queue)
         print('Connection to mir100')
         url.close()
-
-        print('Alert ! Returning Home')
-
         print('MiR connection closed')
 
     except urllib2.URLError:
         print('Waiting for MiR connection')
         time.sleep(10)
-'''
+
+    try:
+        url = urllib2.urlopen(api_go_home)
+        print('Connection to mir100')
+        url.close()
+        print('MiR connection closed')
+
+    except urllib2.URLError:
+        print('Waiting for MiR connection')
+        time.sleep(10)
+
 
 
 def get_position(urllink):
