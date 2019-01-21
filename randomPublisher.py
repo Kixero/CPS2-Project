@@ -30,6 +30,7 @@ def on_message(client, userdata, message):
 
 def connectMQQT(brokeraddress, brokerport):
     client = mqttClient.Client("mir-converter")
+    client.username_pw_set('test2', '')
     client.on_connect = on_connect
     client.on_publish = on_publish
     client.on_message = on_message
@@ -77,8 +78,8 @@ def random_values(vmin, vmax, n):
 def main():
     rd.seed(12)
     n = 20
-    broker_address = "192.168.1.14"
-    broker_port = 1883
+    broker_address = "localhost"
+    broker_port = 1884
     positions = random_positions(10, 24, 12, 20, 0.5, n)
     temperatures = random_values(19, 21, n*4)
 
