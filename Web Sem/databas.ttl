@@ -1,0 +1,57 @@
+@prefix geo:   <http://www.w3.org/2003/01/geo/wgs84_pos#> .
+@prefix cdt:   <http://w3id.org/lindt/custom_datatypes#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix geom:  <http://data.ign.fr/def/geometrie/> .
+@prefix sosa:  <http://www.w3.org/ns/sosa/> .
+
+<http://localhost:3030/mesures/luminosity>
+        a                  sosa:ObservableProperty ;
+        rdfs:label         "luminosity"@en ;
+        sosa:isObservedBy  <http://www.example.org/mesures/sensor/mobile1/LUMI> .
+
+<http://localhost:3030/mesures/sensor/mobile1/LUMI>
+        a                sosa:Sensor ;
+        rdfs:label       "luminosity sensor"@en ;
+        sosa:isHostedBy  <http://www.example.org/mesures/mir> ;
+        sosa:observes    <http://www.example.org/mesures/luminosity> .
+
+<http://lwww.example.org/mesures/humidity>
+        a                  sosa:ObservableProperty ;
+        rdfs:label         "humidity"@en ;
+        sosa:isObservedBy  <http://www.example.org/mesures/sensor/mobile1/HMDT> .
+
+<http://www.example.org/mesures/sensor/mobile1/HMDT>
+        a                sosa:Sensor ;
+        rdfs:label       "humidity sensor"@en ;
+        sosa:isHostedBy  <http://www.example.org/mesures/mir> ;
+        sosa:observes    <http://www.example.org/mesures/humidity> .
+
+<http://www.example.org/mesures/sound>
+        a                  sosa:sound ;
+        rdfs:label         "sound"@en ;
+        sosa:isObservedBy  <http://www.example.org/mesures/sensor/mobile1/SND> .
+
+<http://www.example.org/mesures/sensor/mobile1/SND>
+        a                sosa:Sensor ;
+        rdfs:label       "sound sensor"@en ;
+        sosa:isHostedBy  <http://www.example.org/mesures/mir> ;
+        sosa:observes    <http://www.example.org/mesures/sound> .
+
+<http://www.example.org/temperature>
+        a                  sosa:ObservableProperty ;
+        rdfs:label         "temperature"@en ;
+        sosa:isObservedBy  <http://www.example.org/mobile1/TEMP> .
+
+<http://www.example.org/sensor/mobile1/TEMP>
+        a                sosa:Sensor ;
+        rdfs:label       "temperature sensor"@en ;
+        sosa:isHostedBy  <http://www.example.org/mir> ;
+        sosa:observes    <http://www.example.org/temperature> .
+
+<http://www.example.org/mir>
+        a             sosa:Platform ;
+        rdfs:comment  "Our MIR"@en ;
+        rdfs:label    "MIR"@en ;
+        sosa:hosts    <http://www.example.org/mesures/sensor/mobile1/HMDT> , <http://www.example.org/mesures/sensor/mobile1/SND> , <http://www.example.org/mesures/sensor/mobile1/LUMI> , <http://www.example.orgmesures/sensor/mobile1/TEMP> .

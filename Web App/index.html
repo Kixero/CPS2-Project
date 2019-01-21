@@ -52,8 +52,10 @@
             <button type="button" class="btn btn-primary" id="TEMP" > Temperature <i class="fa fa-thermometer-half"></i></input>
             <button type="button" class="btn btn-primary" id="SOUND" > Sond <i class="fa fa-volume-up"></i></input>
             <button type="button" class="btn btn-primary" id="HUM" > Humidité <i class="fa fa-tint"></i></input>
+            <button type="button" class="btn btn-primary" id="LUM" > Luminosité <i class="fa fa-lightbulb-o"></i></input>
         </div>
-        <button type="button" class="btn btn-primary" id="reset" ><i class="fa fa-retweet"></i></input>
+        <button type="button" class="btn btn-primary" id="reset" ><i class="fa fa-retweet"></i></button>
+        <h4 id="last_measure" disabled>Last measure at :</h4>
       </div>
 
       <div id="heatmapLegend">
@@ -75,13 +77,8 @@
     </div>
   </div>
 
-  <div id="appGetValues">
-    <div class="row" v-for="room in info">
-      <div class="col-sm">
-        {{ room.id }}
-      </div>
-    </div>
-  </div>
+  <span id="value_to_get" style="color:white">temp</span>
+
 
   <script src="heatmap.js/build/heatmap.js"></script>
   <script src="heatmap.js/build/heatmap.min.js"></script>
@@ -121,7 +118,6 @@
     };
     /* legend code end */
 
-
     // create a heatmap instance
     var heatmap = h337.create({
       container: document.getElementById('heatmapContainer'),
@@ -140,50 +136,8 @@
     //initial SetData
     resetData();
 
-  //Data random generation
-  // whenever a user clicks on the ContainerWrapper the data will be regenerated -> new max & min
-  /*
-    // boundaries for data generation
-    var width = (+window.getComputedStyle(document.body).width.replace(/px/,''));
-    var height = (+window.getComputedStyle(document.body).height.replace(/px/,''));
-    // generate 1000 datapoints
-    var generate = function() {
-      // randomly generate extremas
-      var extremas = [(Math.random() * 1000) >> 0,(Math.random() * 1000) >> 0];
-      var max = Math.max.apply(Math, extremas);
-      var min = Math.min.apply(Math,extremas);
-      var t = [];
-
-
-      for (var i = 0; i < 500; i++) {
-        var x = (Math.random()* width) >> 0;
-        var y = (Math.random()* height) >> 0;
-        var c = ((Math.random()* max-min) >> 0) + min;
-        // btw, we can set a radius on a point basis
-        var r = (Math.random()* 80) >> 0;
-        // add to dataset
-        t.push({ x: x, y: y, value: c, radius: r });
-      }
-      var init = +new Date;
-      // set the generated dataset
-      heatmap.setData({
-        min: min,
-        max: max,
-        data: t
-      });
-      console.log('took ', (+new Date) - init, 'ms');
-    };
-    // initial generate
-    generate();
-  */
-
-
-    document.getElementById('heatmapContainerWrapper').onclick = function() {
-      //console.log('regenerating');
-      //generate();
-    };
-
     /*Add point on click*/
+
     get('heatmapContainer').onclick = function (e) {
       var dataPoint = {
         x: e.layerX,
@@ -196,7 +150,6 @@
       console.log('adding element');
       heatmap.addData(dataPoint);
     };
-
 
     /*funciton to clear the map*/
     function resetData(){
@@ -211,86 +164,128 @@
     $('#TEMP').on('click',function() {
       console.log("changing to temp");
       resetData();//reseting data
-      console.log(info);
+      document.getElementById("value_to_get").innerHTML = "temp";
     });
     $('#SOUND').on('click',function() {
       console.log("changing to SOUND");
+      document.getElementById("value_to_get").innerHTML = "snd";
       resetData();//reseting data
-
+    });
+    $('#LUM').on('click',function() {
+      console.log("changing to lum");
+      document.getElementById("value_to_get").innerHTML = "lum";
+      resetData();//reseting data
     });
     $('#HUM').on('click',function() {
       console.log("changing to HUM");
+      document.getElementById("value_to_get").innerHTML = "hum";
       resetData();//reseting data
-
     });
     $('#reset').on('click',function() {
       console.log("reset val");
       resetData();//reseting data
     });
 
-    createPoint(10,12);
-    createPoint(24,12);
-    createPoint(24,20);
-    createPoint(10,20);
+    //Async function to get values of x, y and value
+    async function callValue(type_data) {
 
-    /*function to create a new point*/
-    function createPoint(x1,y1){
-      //extrem values for x2 and y1 : (10,12) (24,12) (24,20) (10,20)
-      coord = convertXY(x1,y1);
+      type_data = document.getElementById('value_to_get').innerHTML;
+      console.log("type of data ="+type_data );
+
+      if(type_data == "temp"){ //Temperature
+        info = await Value.getTempData(); //calling external vueJS function !await is very important!
+        console.log("Gettig temp");
+      }else if(type_data == "snd"){
+        info = await Value.getSndData(); //calling external vueJS function !await is very important!
+        console.log("getting sound");
+      }else if(type_data == "lum"){
+        info = await Value.getLumData(); //calling external vueJS function !await is very important!
+        console.log("getting luminosity");
+      }else if(type_data == "hum" ){
+        info = await Value.getHumData(); //calling external vueJS function !await is very important!
+        console.log("getting humidity");
+      }
+
+      console.log("info = "+info );
+
+      //Getting the x, y values
+      var x = info.results.bindings[0].x.value;
+      var y = info.results.bindings[0].y.value;
+      //Retrinving the time
+      var time = info.results.bindings[0].time.value;
+      //Retrinving the data value depending on the type
+      if(type_data == "temp"){ //Temperature
+        var value = info.results.bindings[0].temp.value;
+        value = value.split(' ')[0];//Get the raw value
+      }else if(type_data == "snd"){
+        var value = info.results.bindings[0].snd.value; //TODO : change depending of JSON
+      }else if(type_data == "lum"){
+        var value = info.results.bindings[0].lum.value;
+      }else if(type_data == "hum" ){
+        var value = info.results.bindings[0].hum.value;
+        value = value.split(' ')[0];//Get the raw value
+      }else{
+        console.log("error, could not read type of data")
+      }
+
+      //Format the values
+      time = time.replace('T',' ');
+      time = time.replace('-','/');
+      time = time.replace('-','/');
+
+      //convert to float
+      value = parseFloat(value);
+      x = parseFloat(x);
+      y = parseFloat(y);
+
+      //If temp value is too high -> alert
+      if(value > 40 && type_data == "temp"){
+        alert("Temperature too high ! : "+temp+"°C");
+      }
+
+      $('#last_measure').html("Last measurement the : " + time); //Changing date
+
+      /*
+      console.log("<< New Point >>");
+      console.log("X = "+ x);
+      console.log("Y = "+ y);
+      console.log("Time = "+ time);
+      console.log("value = "+ value);
+      */
+
+      //adding point the the heatmap
+      addpoint(x,y,value);
+
+    }
+
+    function addpoint(x,y,value) {
+      coord = convertXY(x,y);
+      console.log("Creating new point, x1 = "+coord[0]+"; y1 = "+coord[1]+"value = "+value);
+      //console.log("x1 ="+ typeof(coord[0]) + " y1 = "+ coord[1] + "value = "+ value);
       var dataPoint = {
         x: coord[0],
         y: coord[1],
-        radius: 30,
-        value: 25
-        //value:((Math.random()* 40) >> 0)//Random val
+        radius: 50,
+        value: value
       };
-      //console.log('adding element');
       heatmap.addData(dataPoint);
-
-    }
-    /*
-    //Get Values
-    var GetValue = new Vue({
-
-      data: {
-        info:[],
-        id:null,
-        value:null,
-        x:null,
-        y:null,
-      },
-
-      mounted () {
-        axios
-        .get("http://localhost:8080/fuseki/TestCPS2/query?query=SELECT+*+WHERE+%7B+++%3Fsub+%3Fpred+%3Fobj+.+%7D+")//TODO : change that
-        .then(response => (this.info = response.data))
-        .catch(error => console.log(error))
-      },
-    });
-    console.log("Get response : ");
-    console.log(GetValue.info);
-    */
-
-
-    async function callValue() {
-      info = await Value.getData(); //calling external function
-      console.log("Value.x = "+ info.id);
     }
 
-    //todo every second
-    callValue();
-
+    //Call values every second
+    setInterval(callValue,1000);
+    //callValue();
   }; //End of onload
 
   function get(id) {
       return document.getElementById(id);
   }
 
-
   /*function to convert x,y values from the MIR to pixels values*/
   function convertXY(x,y) {
     x2 = 180 + (x-10)*440/14; //Values have been chane empiracly
     y2 = 450 - (y-12)*300/8;
+    x2 = parseInt(x2);
+    y2 = parseInt(y2);
     return [x2,y2];
   }
 

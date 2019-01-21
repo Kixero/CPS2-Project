@@ -1,0 +1,66 @@
+BASE     <http://localhost:3030>
+PREFIX rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#> 
+PREFIX sosa:    <http://www.w3.org/ns/sosa/> 
+PREFIX cdt:     <http://w3id.org/lindt/custom_datatypes#> 
+PREFIX geo:     <http://www.w3.org/2003/01/geo/wgs84_pos#> 
+PREFIX geom:  <http://data.ign.fr/def/geometrie/> 
+
+INSERT DATA 
+{ 
+<observation/''' + nbre + '''T> a 	sosa:Observation ; 
+    sosa:observedProperty <temperature> ; 
+    sosa:hasFeatureOfInterest 
+    [ 
+        geo:lat ''' + str(lat) + ''' ; 
+        geo:long ''' + str(long) + ''' ; 
+        geom:x ''' + str(posX) + ''' ;
+        geom:y ''' + str(posY) + '''
+    ] ; 
+    sosa:madeBySensor <sensor/mobile1/TEMP> ; 
+    sosa:hasSimpleResult "''' + str(Temperature) + ''' Cel"^^cdt:temperature ; 
+    sosa:resultTime "''' + get_formated_time() + '''"^^xsd:dateTime .
+
+
+
+<observation/''' + nbre + '''H> a 	sosa:Observation ; 
+    sosa:observedProperty <humidity> ; 
+    sosa:hasFeatureOfInterest 
+    [ 
+        geo:lat ''' + str(lat) + ''' ; 
+        geo:long ''' + str(long) + ''' ; 
+        geom:x ''' + str(posX) + ''' ;
+        geom:y ''' + str(posY) + '''
+    ] ; 
+    sosa:madeBySensor <sensor/mobile1/HMDT> ; 
+    sosa:hasSimpleResult "''' + str(Humidity) + ''' %"^^cdt:dimensionless ; 
+    sosa:resultTime "''' + get_formated_time() + '''"^^xsd:dateTime .
+
+
+<observation/''' + nbre + '''S> a 	sosa:Observation ; 
+    sosa:observedProperty <sound> ; 
+    sosa:hasFeatureOfInterest 
+    [ 
+        geo:lat ''' + str(lat) + ''' ; 
+        geo:long ''' + str(long) + ''' ; 
+        geom:x ''' + str(posX) + ''' ;
+        geom:y ''' + str(posY) + '''
+    ] ; 
+    sosa:madeBySensor <sensor/mobile1/SND> ; 
+    sosa:hasSimpleResult "''' + str(Sound) + '''" ; 
+    sosa:resultTime "''' + get_formated_time() + '''"^^xsd:dateTime .
+
+<observation/''' + nbre + '''L> a 	sosa:Observation ; 
+    sosa:observedProperty <luminosity> ; 
+    sosa:hasFeatureOfInterest 
+    [ 
+        geo:lat ''' + str(lat) + ''' ; 
+        geo:long ''' + str(long) + ''' ; 
+        geom:x ''' + str(posX) + ''' ;
+        geom:y ''' + str(posY) + '''
+    ] ; 
+    sosa:madeBySensor <sensor/mobile1/LUMI> ; 
+    sosa:hasSimpleResult "''' + str(Luminosity) + '''" ; 
+    sosa:resultTime "''' + get_formated_time() + '''"^^xsd:dateTime .
+}
