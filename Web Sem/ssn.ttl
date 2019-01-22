@@ -1,0 +1,71 @@
+BASE     <http://localhost:8080>
+PREFIX rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#> 
+PREFIX sosa:    <http://www.w3.org/ns/sosa/> 
+PREFIX cdt:     <http://w3id.org/lindt/custom_datatypes#> 
+PREFIX geo:     <http://www.w3.org/2003/01/geo/wgs84_pos#> 
+PREFIX geom:  <http://data.ign.fr/def/geometrie/> 
+
+
+
+INSERT DATA 
+{ 
+<temperature> a sosa:ObservableProperty ;
+	sosa:isObservedBy <sensor/mobile1/TEMP> ;
+	rdfs:label "temperature"@en .
+
+<humidity> a sosa:ObservableProperty ;
+	sosa:isObservedBy <sensor/mobile1/HMDT> ;
+	rdfs:label "humidity"@en .
+
+
+<mir> a sosa:Platform ;
+	sosa:hosts <sensor/mobile1/TEMP> ;
+	rdfs:label "MIR"@en ;
+	rdfs:comment "Our MIR"@en .
+
+
+<sensor/mobile1/TEMP> a sosa:Sensor ;
+	sosa:isHostedBy <mir> ;
+	sosa:observes <temperature> ;
+	rdfs:label "temperature sensor"@en .
+
+	
+<sensor/mobile1/HMDT> a sosa:Sensor ;
+	sosa:isHostedBy <mir> ;
+	sosa:observes <humidity> ;
+	rdfs:label "humidity sensor"@en .
+
+
+<observation/346345> a 	sosa:Observation ;
+	sosa:observedProperty <temperature> ;
+	sosa:hasFeatureOfInterest 
+	[
+		geo:lat 35.8648067 ;
+		geo:long -120.6195831 ;
+		geom:x 14;
+		geom:y 15
+	] ;
+	sosa:madeBySensor <sensor/mobile1/TEMP> ;
+	sosa:hasSimpleResult "25.4 Cel"^^cdt:temperature ;
+	sosa:resultTime "2017-06-06T12:36:12"^^xsd:dateTime ;
+
+<observation/346340> a 	sosa:Observation ;
+    sosa:observedProperty <humidity> ; 
+	sosa:hasFeatureOfInterest 
+	[
+		geo:lat 35.8648067 ;
+		geo:long -120.6195831 ;
+		geom:x 15;
+		geom:y 16
+	] ;
+    sosa:madeBySensor <sensor/mobile1/HMDT> ; 
+	sosa:hasSimpleResult "13 %"^^cdt:dimensionless ;
+	sosa:resultTime "2017-06-06T12:36:00"^^xsd:dateTime ;
+}
+					
+
+
+
+

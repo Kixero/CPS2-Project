@@ -1,0 +1,24 @@
+//select latitude and longitude
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+prefix geo:   <http://www.w3.org/2003/01/geo/wgs84_pos#> 
+
+SELECT ?lat ?long WHERE {
+ <http://localhost:8080/fuseki/TestCPS2/observation/346345>
+        sosa:hasFeatureOfInterest  [ geo:lat   ?lat ;
+      								geo:long  ?long ]
+}
+
+//Select time :
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+
+SELECT ?time WHERE {
+  <http://localhost:8080/fuseki/TestCPS2/observation/346345> sosa:resultTime ?time  
+}
+
+
+

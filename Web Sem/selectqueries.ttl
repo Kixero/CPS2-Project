@@ -1,0 +1,44 @@
+PREFIX rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#> 
+PREFIX sosa:    <http://www.w3.org/ns/sosa/> 
+PREFIX cdt:     <http://w3id.org/lindt/custom_datatypes#> 
+PREFIX geo:     <http://www.w3.org/2003/01/geo/wgs84_pos#> 
+PREFIX geom:  <http://data.ign.fr/def/geometrie/> 
+Base <http://localhost:8080>
+
+SELECT ?x ?y ?maxtime ?temp WHERE {
+  	?obs sosa:hasSimpleResult ?temp.
+	?obs sosa:observedProperty <temperature>.
+  	?obs sosa:hasFeatureOfInterest  [ geo:lat   ?lat ;
+    				  				  geo:long  ?long ; 
+            						  geom:x ?x;
+      								  geom:y ?y ] .
+	?obs sosa:resultTime ?maxtime .
+  {
+	SELECT (max(?time) as ?maxtime) WHERE {
+  		?obs a sosa:Observation .
+  		?obs sosa:resultTime ?time .
+	}	 
+  }
+}
+
+PREFIX rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#> 
+PREFIX sosa:    <http://www.w3.org/ns/sosa/> 
+PREFIX cdt:     <http://w3id.org/lindt/custom_datatypes#> 
+PREFIX geo:     <http://www.w3.org/2003/01/geo/wgs84_pos#> 
+PREFIX geom:  <http://data.ign.fr/def/geometrie/> 
+Base <http://localhost:8080>
+SELECT ?x ?y ?time ?hum WHERE {
+  ?obs sosa:hasSimpleResult ?hum.
+  ?obs sosa:observedProperty <humidity>.
+  ?obs sosa:hasFeatureOfInterest  [ geo:lat   ?lat ;
+                                    geo:long  ?long ; 
+                                    geom:x ?x;
+                                    geom:y ?y ] .
+  ?obs sosa:resultTime ?time .
+}ORDER BY DESC(?time) LIMIT 1
+  
+
