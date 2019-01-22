@@ -1,39 +1,78 @@
-import json
-import urllib2
-import paho.mqtt.client as mqttClient
-from SPARQLWrapper import SPARQLWrapper, JSON
 import datetime
-import time
-import re
+import json
 import math
+import paho.mqtt.client as mqttClient
+import re
+from SPARQLWrapper import SPARQLWrapper, JSON
+import time
+import urllib2
 
-Connected = False #global variable for the state of the connection
 
-#The token to access to the Mir AGV API
-#TODO fill the api access token
-api_token = ""
+"""
+This Python script receives the values sent by the sensors in the IT'M from the MQTT 
+broker and then fetches the AGV's position. 
+It then creates a SPARQL query with this data to update an Apache Jena Server with an
+RDF database.
+"""
 
+# Global variable for the state of the connection
+Connected = False 
+
+# Global variable to enable Test_Mode to use with the AGV emulator
+# (see randomPublisher.py)
+Test_Mode = True
+
+# TODO Fill this
+# The token to access to the Mir AGV API
+Api_Token = ""
+
+# Global variables for the measures values as they are only sent by the sensors
+# when the value changes
 Temperature = 0
 Sound = 0
 Humidity = 0
 Luminosity = 0
 
+# Global variables for the AGV's position only used in Test_Mode
+posX = 0
+posY = 0
+
+# URL for the queries into the 'mesures' dataset onthe Jena server
+jena_url = "http://localhost:3030/mesures/update"
+
+# URL to the AGV's API to retrieve its status
+url_info = 'http://192.168.42.253/api/v2.0.0/status' 
+
+# MQTT topic for the sensor on the AGV
+sensor_topic = 'emse/fayol/Mobile1/sensors/d1d7e6d4-db84-4a7c-a5e0-5bbddc9f130b/metrics/'
+
+# A made up topic used for tests
+test_topic = 'emse/fayol/Mobile1/CPS2/test/metrics/'
+
+# URL for the AGV's API endpoint for the queue mission
+api_queue_url = "http://mir.com:8080/v2.0.0/mission_queue"
+
+
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code " + str(rc))
     if rc == 0: 
         print("Connected to broker") 
-        global Connected                #Use global variable
-        Connected = True                #Signal connection  
+        global Connected 
+        Connected = True 
     else: 
         print("Connection failed")
+
 
 def on_publish(client,userdata,result):
     #create function for callback
     print("data published " + str(result))
     pass
 
+# Converts the x,y coordinates from the internal positioning system of
+# the AGV into latitude and longitude coordinates.
+# The formula was provided by Mireille Batton-Hubert
 def to_lat_long(posX, posY):
-    #Parametres
+    # Parameters
     a1 = -0.42 # D1 : y = a1 x + b1
     a2 = 2.7 # D2 : y = a2 x + b2
     b1 = 5895038.9
@@ -57,19 +96,26 @@ def to_lat_long(posX, posY):
 
     return postransfx, postransfy
 
+# Retrieves current time and set it to the write format for the RDF syntax
 def get_formated_time():
     return str(datetime.datetime.now()).replace(' ', 'T')[:-7]
 
+# Sends the SPARQL request to update the database
 def send_update_request():
-    #url_info = 'http://192.168.42.253/api/v2.0.0/status' 
-    url_info = 'http://faircorp-anthony-meranger.cleverapps.io/api/location'
-
     nbre = re.sub(r"\D", "",str(datetime.datetime.now()))
 
-    posX, posY = get_position(url_info)
-    # posX, posY = 11.3, 19.4
+    # Fetch for the AGV's position with its API if not in Test_Mode
+    if (Test_Mode):
+        # Use global posX and posY variables
+        pass
+    else:
+        posX, posY = get_position(url_info)
+
+    # Convert positions to latitude and longitude
     lat, long = to_lat_long(posX, posY)
 
+    # The (very long) SPARQL request to update the database with a new entry 
+    # of 4 observations
     stringQuery = '''  BASE     <http://www.example.org>
                 PREFIX rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
                 PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#> 
@@ -134,91 +180,86 @@ def send_update_request():
                     sosa:resultTime "''' + get_formated_time() + '''"^^xsd:dateTime .
                 } '''
 
-    sparql = SPARQLWrapper("http://localhost:3030/mesures/update")
+    # Send the request and print the result
+    sparql = SPARQLWrapper(jena_url)
     sparql.setQuery(stringQuery)
     sparql.setMethod('POST')
     results = sparql.query().convert()
         
     print(results)
-                
+
+# Updates the globla variables when receiving a MQTT message and initiate a new request for the datatbase
 def on_message(client, userdata, message): 
     print(message.topic + " " + str(message.payload))
 
     global Temperature, Humidity, Sound, Luminosity
 
-    if (message.topic == 'emse/fayol/Mobile1/sensors/d1d7e6d4-db84-4a7c-a5e0-5bbddc9f130b/metrics/TEMP'
-        or message.topic == 'emse/fayol/Mobile1/CPS2/test/metrics/TEMP'):
-        Temperature = message.payload
-        if Temperature > 55:
-            #go_home()
-            pass
+    if (Test_Mode):
+        global posX, posY
 
-    elif (message.topic == 'emse/fayol/Mobile1/sensors/d1d7e6d4-db84-4a7c-a5e0-5bbddc9f130b/metrics/HMDT'
-        or message.topic == 'emse/fayol/Mobile1/CPS2/test/metrics/HMDT'):
+    if (message.topic == sensor_topic + 'TEMP'
+        or message.topic == test_topic + 'TEMP'):
+        Temperature = message.payload
+
+        # If the temperature gets to high sed the AGV back to safety
+        if Temperature > 55:
+            go_home()
+
+    elif (message.topic == sensor_topic + 'HMDT'
+        or message.topic == test_topic + 'HMDT'):
         Humidity = message.payload
 
-    elif (message.topic == 'emse/fayol/Mobile1/sensors/d1d7e6d4-db84-4a7c-a5e0-5bbddc9f130b/metrics/SND'
-        or message.topic == 'emse/fayol/Mobile1/CPS2/test/metrics/SND'):
+    elif (message.topic == sensor_topic + 'SND'
+        or message.topic == test_topic + 'SND'):
         Sound = message.payload
 
-    elif (message.topic == 'emse/fayol/Mobile1/sensors/d1d7e6d4-db84-4a7c-a5e0-5bbddc9f130b/metrics/LUMI'
-        or message.topic == 'emse/fayol/Mobile1/CPS2/test/metrics/LUMI'):
+    elif (message.topic == sensor_topic + 'LUMI'
+        or message.topic == test_topic + 'LUMI'):
         Luminosity = message.payload
 
+    elif (message.topic == sensor_topic + 'POSX'
+        or message.topic == test_topic + 'POSX'):
+        posX = float(message.payload)
+
+    elif (message.topic == sensor_topic + 'POSY'
+        or message.topic == test_topic + 'POSY'):
+        posY = float(message.payload)
+
+    # Initiates the request
     send_update_request()
 
-
+# Orders the AGV to go to a safe spot defined 
 def go_home():
     print('Alert ! Returning Home')
-    api_queue_url = "mir.com:8080/v2.0.0/mission_queue"
 
+    # Create a request to flush the mission queue and send it
     delete_request = urllib2.Request(api_queue_url)
-    delete_request.add_header('Authorization', api_token)
+    delete_request.add_header('Authorization', Api_Token)
     delete_request.get_method = lambda: 'DELETE'
 
     try:
         urllib2.urlopen(delete_request)
+
     except urllib2.URLError:
         print('Waiting for MiR connection')
         time.sleep(10)
 
-    #TODO fill what data do we have to give to the mission_queue (ie the mission id)
+    # TODO fill what data do we have to give to the mission_queue (ie the mission id)
+    # Create a request to add the mission to go to the point named 'Home' and send it
     data = {}
     go_home_request = urllib2.Request(api_queue_url, json.dumps(data))
-    go_home_request.add_header('Authorization', api_token)
+    go_home_request.add_header('Authorization', Api_Token)
     go_home_request.add_header('Content-Type', 'application/json')
     go_home_request.get_method = lambda: 'DELETE'
 
     try:
         urllib2.urlopen(go_home_request)
-    except urllib2.URLError:
-        print('Waiting for MiR connection')
-        time.sleep(10)
-
-
-def get_position(urllink):
-    try:
-        url = urllib2.urlopen(urllink)
-        print('Connection to mir100')
-        response = json.loads(url.read())
-        url.close()
-
-        for key1, value1 in response.items():
-            if (key1 == 'x'):
-                posX = value1
-            elif (key1 == 'y'):
-                posY = value1
-
-        print('MiR connection closed')
 
     except urllib2.URLError:
         print('Waiting for MiR connection')
         time.sleep(10)
 
-    return posX, posY
 
-
-"""
 def get_position(urllink):
     try:
         url = urllib2.urlopen(urllink)
@@ -243,40 +284,48 @@ def get_position(urllink):
 
     return posX, posY
 
-"""
-
 
 def connectMQQT():
-    #brokeraddress= "193.49.165.40"
-    #brokerport = 1883    
-    #brokeraddress = '10.103.1.149'
-    brokeraddress = 'localhost'
-    brokerport = 1884
+    if (Test_Mode):
+        brokeraddress = 'localhost'
+        brokerport = 1884
+    else:
+        # Adress of the MQTT broker at EMSE
+        brokeraddress= "193.49.165.40"
+        brokerport = 1883
 
+    # Setting callback functions
     client = mqttClient.Client("mir-converter")
     client.on_connect = on_connect
     client.on_publish = on_publish
     client.on_message = on_message
     client.connect(brokeraddress, brokerport, 60)
 
-    client.subscribe('emse/fayol/Mobile1/sensors/d1d7e6d4-db84-4a7c-a5e0-5bbddc9f130b/metrics/#')
-    client.subscribe('emse/fayol/Mobile1/CPS2/test/metrics/#')
+    # Subscribing to snesor and test topics
+    client.subscribe(sensor_topic + '#')
+    client.subscribe(test_topic + '#')
 
     client.loop_start()
     return client
 
+
 def disconnectMQTT(clientMQQT):
    clientMQQT.disconnect()
 
+
 def main():
     while True:
+
         while not Connected:
             print('Broker MQQT connection')
             client = connectMQQT()
             time.sleep(10)
+
         while Connected:
+            # Create new points even if no new measurment was received
             send_update_request()
             time.sleep(5)
+
     disconnectMQTT(client)
         
         
