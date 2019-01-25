@@ -106,8 +106,7 @@ def send_update_request():
 
     # Fetch for the AGV's position with its API if not in Test_Mode
     if (Test_Mode):
-        # Use global posX and posY variables
-        pass
+        global posX, posY
     else:
         posX, posY = get_position(url_info)
 
@@ -185,6 +184,8 @@ def send_update_request():
     sparql.setQuery(stringQuery)
     sparql.setMethod('POST')
     results = sparql.query().convert()
+
+    print(posX, posY, Temperature)
         
     print(results)
 
@@ -202,7 +203,7 @@ def on_message(client, userdata, message):
         Temperature = message.payload
 
         # If the temperature gets to high sed the AGV back to safety
-        if Temperature > 55:
+        if int(Temperature) > 55:
             go_home()
 
     elif (message.topic == sensor_topic + 'HMDT'
@@ -227,6 +228,7 @@ def on_message(client, userdata, message):
 
     # Initiates the request
     send_update_request()
+    
 
 # Orders the AGV to go to a safe spot defined 
 def go_home():

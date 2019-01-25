@@ -73,7 +73,7 @@ def random_positions(xmin, xmax, ymin, ymax, sigma, n):
     return positions
 
 def random_values(vmin, vmax, n):
-    return np.random.normal((vmin + vmax)/2, (vmax - vmin)/2, n)
+    return np.random.normal((vmin + vmax)/2, (vmax - vmin) * 4, n)
 
 def main():
     rd.seed(12)
@@ -82,8 +82,6 @@ def main():
     broker_port = 1884
     positions = random_positions(10, 24, 12, 20, 0.5, n)
     temperatures = random_values(19, 21, n*4)
-
-    temp = True
 
     while True:
         while not Connected:
@@ -96,17 +94,13 @@ def main():
             for k in range (n*4):
                 ret = client.publish("emse/fayol/Mobile1/CPS2/test/metrics/POSX",str(positions[k][0]))
                 print(ret)
-                time.sleep(3)
+                time.sleep(1)
                 ret = client.publish("emse/fayol/Mobile1/CPS2/test/metrics/POSY",str(positions[k][1]))
                 print(ret)
-                time.sleep(3)
-                if (temp):
-                    ret = client.publish("emse/fayol/Mobile1/CPS2/test/metrics/TEMP",str(temperatures[k]))
-                else:
-                    ret = client.publish("emse/fayol/Mobile1/CPS2/test/metrics/HMDT",str(temperatures[k]))
+                time.sleep(1)
+                ret = client.publish("emse/fayol/Mobile1/CPS2/test/metrics/TEMP",str(temperatures[k]))
                 print (ret)
-                temp = not temp
-                time.sleep(3)
+                time.sleep(2)
     disconnectMQTT(client)
 
 
