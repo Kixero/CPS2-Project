@@ -29,7 +29,7 @@ def on_message(client, userdata, message):
 
 
 def connectMQQT(brokeraddress, brokerport):
-    client = mqttClient.Client("mir-converter")
+    client = mqttClient.Client("mir-emulator")
     client.username_pw_set('test2', '')
     client.on_connect = on_connect
     client.on_publish = on_publish
@@ -83,18 +83,29 @@ def main():
     positions = random_positions(10, 24, 12, 20, 0.5, n)
     temperatures = random_values(19, 21, n*4)
 
+    temp = True
+
     while True:
         while not Connected:
             print('Broker MQQT connection')
             client = connectMQQT(broker_address, broker_port)
             time.sleep(10)
         while Connected:
-            print("connected")
+            print("Connected")
             time.sleep(5)
             for k in range (n*4):
-                ret = client.publish("emse/fayol/Mobile1/CPS2/test/metrics/POS",str(positions[k]))
-                ret = client.publish("emse/fayol/Mobile1/CPS2/test/metrics/TEMP",str(temperatures[k]))
+                ret = client.publish("emse/fayol/Mobile1/CPS2/test/metrics/POSX",str(positions[k][0]))
+                print(ret)
+                time.sleep(3)
+                ret = client.publish("emse/fayol/Mobile1/CPS2/test/metrics/POSY",str(positions[k][1]))
+                print(ret)
+                time.sleep(3)
+                if (temp):
+                    ret = client.publish("emse/fayol/Mobile1/CPS2/test/metrics/TEMP",str(temperatures[k]))
+                else:
+                    ret = client.publish("emse/fayol/Mobile1/CPS2/test/metrics/HMDT",str(temperatures[k]))
                 print (ret)
+                temp = not temp
                 time.sleep(3)
     disconnectMQTT(client)
 
