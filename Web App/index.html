@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script><!-- Add VueJS -->
-  <script src="https://unpkg.com/axios/dist/axios.min.js"></script><!-- Add axio -->
-
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script><!-- Add axio : for GET requests-->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
@@ -14,8 +13,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><!-- Add icon library -->
 
   <style>
-
   /*!!!DO NOT CHANGE width and height VALUES!!!*/
+  /*The size of the map is fixed and not adaptative to the screen to ease the positionning of the points on the heatmap*/
   #heatmapContainerWrapper { width:100%; height:100%; min-width: 800px;min-height: 800px; max-width: 800px;max-height: 800px;position:absolute;}
   #heatmapContainer { width:100%; height:100%; left:0px;top:0px;}
   .map{
@@ -35,12 +34,12 @@
       height:100%;
   }
   /*!!!DO NOT CHANGE width and height VALUES!!!*/
-
   #heatmapLegend { background:white; position:absolute; top:0; right:0; padding:10px; background-color:rgba(0, 0, 0, 0.2);}
   #min { float:left; }
   #max { float:right; }
 
   </style>
+
 </head>
 <body>
 
@@ -48,7 +47,7 @@
     <div class="row">
       <div class="options">
 
-        <div class="btn-group" role="group">
+        <div class="btn-group" role="group"><!--The buttons to change data type-->
             <button type="button" class="btn btn-primary" id="TEMP" > Temperature <i class="fa fa-thermometer-half"></i></input>
             <button type="button" class="btn btn-primary" id="SOUND" > Sond <i class="fa fa-volume-up"></i></input>
             <button type="button" class="btn btn-primary" id="HUM" > Humidité <i class="fa fa-tint"></i></input>
@@ -70,22 +69,23 @@
 
       <div id="heatmapContainerWrapper" class="col-md-9">
         <div id="heatmapContainer"><!--Where the heatmap will be created-->
-          <img src="Ressources/ITM-projetTech.png"  class="map"></img>
+          <img src="Ressources/ITM-projetTech.png"  class="map"></img><!--The map by itself-->
         </div>
 
       </div>
     </div>
   </div>
 
-  <span id="value_to_get" style="color:white">temp</span>
+  <span id="value_to_get" style="color:white">temp</span><!--Stores the value GET with HTTP protocol-->
 
-
-  <script src="heatmap.js/build/heatmap.js"></script>
+  <script src="heatmap.js/build/heatmap.js"></script><!--Libraries for the heatmap-->
   <script src="heatmap.js/build/heatmap.min.js"></script>
-  <script src="AppGetValues.js"></script>
 
+  <script src="AppGetValues.js"></script><!--The script implementing the HTTP requests-->
+
+
+  <!--Script to manipulate the heatmap-->
   <script>
-
 
   window.onload = function() {
 
@@ -120,14 +120,14 @@
 
     // create a heatmap instance
     var heatmap = h337.create({
-      container: document.getElementById('heatmapContainer'),
+      container: document.getElementById('heatmapContainer'), //Containers where to create the heatmap
       radius: 30,
       maxOpacity: 1,
       minOpacity: 0,
       blur: .40,
       absolute:true, //Fix overlapping problems !Very important!
 
-      // update the legend whenever there's an extrema change
+      // update the legend whenever there's an extrema change. Not sure it works
       onExtremaChange: function onExtremaChange(data) {
         updateLegend(data);
       }
@@ -136,8 +136,8 @@
     //initial SetData
     resetData();
 
-    /*Add point on click*/
-
+    /*Add point on click : not useful for the final version but fun tool*/
+    /*
     get('heatmapContainer').onclick = function (e) {
       var dataPoint = {
         x: e.layerX,
@@ -150,6 +150,7 @@
       console.log('adding element');
       heatmap.addData(dataPoint);
     };
+    */
 
     /*funciton to clear the map*/
     function resetData(){
@@ -164,7 +165,7 @@
     $('#TEMP').on('click',function() {
       console.log("changing to temp");
       resetData();//reseting data
-      document.getElementById("value_to_get").innerHTML = "temp";
+      document.getElementById("value_to_get").innerHTML = "temp"; //Used as a global value
     });
     $('#SOUND').on('click',function() {
       console.log("changing to SOUND");
@@ -189,8 +190,7 @@
     //Async function to get values of x, y and value
     async function callValue(type_data) {
 
-      type_data = document.getElementById('value_to_get').innerHTML;
-      console.log("type of data ="+type_data );
+      type_data = document.getElementById('value_to_get').innerHTML; //The type of data we want the HTTP request to return
 
       if(type_data == "temp"){ //Temperature
         info = await Value.getTempData(); //calling external vueJS function !await is very important!
@@ -205,8 +205,6 @@
         info = await Value.getHumData(); //calling external vueJS function !await is very important!
         console.log("getting humidity");
       }
-
-      console.log("info = "+info );
 
       //Getting the x, y values
       var x = info.results.bindings[0].x.value;
@@ -228,7 +226,7 @@
         console.log("error, could not read type of data")
       }
 
-      //Format the values
+      //Format the value of time
       time = time.replace('T',' ');
       time = time.replace('-','/');
       time = time.replace('-','/');
@@ -245,44 +243,36 @@
 
       $('#last_measure').html("Last measurement the : " + time); //Changing date
 
-      /*
-      console.log("<< New Point >>");
-      console.log("X = "+ x);
-      console.log("Y = "+ y);
-      console.log("Time = "+ time);
-      console.log("value = "+ value);
-      */
-
-      //adding point the the heatmap
+      //>> adding point the the heatmap
       addpoint(x,y,value);
 
     }
 
     function addpoint(x,y,value) {
-      coord = convertXY(x,y);
+      coord = convertXY(x,y); //Convert the (x,y) in the MIR coordinates system to pixels for the heatmap
       console.log("Creating new point, x1 = "+coord[0]+"; y1 = "+coord[1]+"value = "+value);
-      //console.log("x1 ="+ typeof(coord[0]) + " y1 = "+ coord[1] + "value = "+ value);
       var dataPoint = {
         x: coord[0],
         y: coord[1],
         radius: 50,
         value: value
       };
-      heatmap.addData(dataPoint);
+      heatmap.addData(dataPoint); //addData : implemented function in the library
     }
 
-    //Call values every second
+    //Call values every second to add a point every seconds
     setInterval(callValue,1000);
-    //callValue();
+
   }; //End of onload
 
+  /*Get id of element in the page*/
   function get(id) {
       return document.getElementById(id);
   }
 
-  /*function to convert x,y values from the MIR to pixels values*/
+  /*function to convert x,y values from the MIR to pixels values for the heatmap*/
   function convertXY(x,y) {
-    x2 = 180 + (x-10)*440/14; //Values have been chane empiracly
+    x2 = 180 + (x-10)*440/14; //Values have been seted empiracly
     y2 = 450 - (y-12)*300/8;
     x2 = parseInt(x2);
     y2 = parseInt(y2);
